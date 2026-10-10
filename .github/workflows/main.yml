@@ -14,18 +14,22 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
+      - name: Unzip project
+        run: |
+          rm -rf project
+          mkdir project
+          unzip -q PayHubSmsForwarder.zip -d project
+          find project -maxdepth 3 | head -30
       - name: Build
         run: |
-          F=$(find . -name settings.gradle.kts -not -path "./.git/*" | head -n1)
+          F=$(find project -name settings.gradle.kts | head -n1)
           if [ -z "$F" ]; then
-            echo "settings.gradle.kts NOT FOUND - project files were not uploaded"
-            ls -R | head -50
+            echo "settings.gradle.kts NOT FOUND inside the zip"
             exit 1
           fi
           cd "$(dirname "$F")"
-          pwd
-          gradle assembleDebug
+          gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: PayHubSmsForwarder-debug-apk
-          path: "**/app/build/outputs/apk/debug/app-debug.apk"
+          path: "project/**/app/build/outputs/apk/debug/app-debug.apk"
